@@ -1,5 +1,15 @@
 # egress-analyzer
-Lightweight, independent TCP egress analyzer for Windows used to identify what destination ports are or aren't blocked by a firewall.
+Lightweight, independent TCP egress analyzer for Windows used to identify what destination ports are or aren't blocked by a firewall. Can also be used within a local network by pointing the client to a device running the egress server.
+
+# Build
+Egress Client
+```
+> g++ egress.cpp -o egress.exe -lws2_32
+```
+Egress Server
+```
+> g++ egressserver.cpp -o egressserver.exe -lws2_32
+```
 
 # Usage
 ```
@@ -17,4 +27,8 @@ Scan all ports
 Scan ports 0-1024 with 20 threads
 ```
 > .\egress.exe -t 20
+```
+Open ports 0-1024 on a system
+```
+> .\egressserver.exe
 ```

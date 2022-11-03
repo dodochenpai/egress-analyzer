@@ -54,7 +54,11 @@ int main(int argc, char *argv[]){
     }
 
     // Initialize WinSock
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (iResult != 0) {
+        printf("WSAStartup failed with error: %d\n", iResult);
+        return 1;
+    }
 
     // Create threads
     cout << "Starting " << numThreads << " thread(s)\n";
@@ -69,8 +73,9 @@ int main(int argc, char *argv[]){
 
     cout << "Open ports: " << globalOpenCount << endl;
     cout << "Closed ports: " << globalClosedCount << endl;
-    cout << "See outfile for more output" << endl;
+    //cout << "See outfile for more output" << endl;
 
+    WSACleanup();
     return 0;
 
 }
@@ -97,15 +102,21 @@ int test_port(int port){
     
     // Set Options
     //string target = "8.8.8.8";
-    string target = "45.79.204.144";
+    //string target = "45.79.204.144";
+    string target = "127.0.0.1";
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons(port);
     sockaddr.sin_addr.s_addr = inet_addr(target.c_str());
-    tv.tv_sec = 1;
+    tv.tv_sec = 5;
     tv.tv_usec = 0;
 
     // Create Socket
     wSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, (unsigned int)NULL, (unsigned int)NULL);
+    if (wSock == INVALID_SOCKET) {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        WSACleanup();
+        return 1;
+    }
     // Set socket to non-blocking
     u_long mode = 1;
     ioctlsocket(wSock, FIONBIO, &mode);
@@ -123,10 +134,10 @@ int test_port(int port){
         FD_SET(wSock, &fds);
         result = select(0, NULL, &fds, NULL, &tv);
         if (result <= 0){
-            cout << "Port " << port << " is not open" << endl;
+            //cout << "Port " << port << " is not open" << endl;
             globalClosedCount++;
         } else {
-            cout << "Port " << port << " is open" << endl;
+            //cout << "Port " << port << " is open" << endl;
             globalOpenCount++;
         }
     }
@@ -139,6 +150,6 @@ void print_usage(){
     cout << "Usage: egress.exe [options]" << endl;
     cout << "OPTIONS:" << endl;
     cout << "  -h print help text" << endl;
-    cout << "  -t <threads> set number of threads" << endl;
-    cout << "  -p <startport>-<endport> choose port range" << endl;
+    cout << "  -t <threads> set number of threads (default: 10)" << endl;
+    cout << "  -p <startport>-<endport> choose port range (default: 0-1024)" << endl;
 }
