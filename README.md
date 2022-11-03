@@ -4,11 +4,11 @@ Lightweight, standalone, command-line based TCP egress analyzer for Windows used
 # Build
 Egress Client
 ```
-> g++ egress.cpp -o egress.exe -lws2_32 -static-libstdc++
+> g++ egress.cpp -o egress.exe -lws2_32 -static-libstdc++ -static -static-libgcc
 ```
 Egress Server
 ```
-> g++ egressserver.cpp -o egressserver.exe -lws2_32 -static-libstdc++
+> g++ egressserver.cpp -o egressserver.exe -lws2_32 -static-libstdc++ -static -static-libgcc
 ```
 
 # Usage
