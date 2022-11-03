@@ -1,5 +1,5 @@
 # egress-analyzer
-Lightweight, standalone TCP egress analyzer for Windows used to identify the destination ports blocked by a firewall. The client can also be used within a local network by pointing to a device running the egress server.
+Lightweight, standalone, command-line based TCP egress analyzer for Windows used to identify the destination ports blocked by a firewall. The client can also be used within a local network by pointing to a device running the egress server.
 
 # Build
 Egress Client
