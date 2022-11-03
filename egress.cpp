@@ -62,11 +62,12 @@ int main(int argc, char *argv[]){
 
     // Create threads
     cout << "Starting " << numThreads << " thread(s)\n";
-    for(int i=portStart;i<numThreads;i++){
-        threads.push_back(thread(thread_handler, i, numThreads, portEnd));
+    for(int i=0;i<numThreads;i++){
+        threads.push_back(thread(thread_handler, i+portStart, numThreads, portEnd));
     }
 
     // Wait for threads to finish before exiting
+    
     for (int i=0;i<numThreads;i++){
         threads[i].join();
     }
