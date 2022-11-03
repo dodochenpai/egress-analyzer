@@ -99,11 +99,14 @@ int test_port(int port){
     SOCKET wSock;
     struct sockaddr_in sockaddr;
     struct timeval tv;
-    
+
     // Set Options
-    //string target = "8.8.8.8";
-    //string target = "45.79.204.144";
-    string target = "127.0.0.1";
+    // Google Test
+    // string target = "8.8.8.8";
+    // allports.exposed
+    string target = "45.79.204.144";
+    // Localhost test
+    // string target = "127.0.0.1";
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons(port);
     sockaddr.sin_addr.s_addr = inet_addr(target.c_str());
