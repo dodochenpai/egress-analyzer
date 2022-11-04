@@ -18,6 +18,7 @@ int open_port(int port);
 int main(int argc, char* argv[]) 
 {
     vector<thread> threads;
+    int numPorts=10;
     // Initialize Winsock
     int result = WSAStartup(MAKEWORD(2,2), &wsaData);
     if (result != 0) {
@@ -26,12 +27,12 @@ int main(int argc, char* argv[])
     }
 
     cout << "Opening ports (this may take a while)..." << endl;
-    for (int i=1;i<1024;i++){
-        threads.push_back(thread(open_port, i));
+    for (int i=0;i<numPorts;i++){
+        threads.push_back(thread(open_port, i+1));
         Sleep(2);
     }
     cout << "Done!";
-    for (int i=0;i<65535;i++){
+    for (int i=0;i<numPorts;i++){
         threads[i].join();
     }
 

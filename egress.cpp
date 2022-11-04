@@ -11,36 +11,60 @@
 #include <vector>
 #include <future>
 
+using namespace std;
+
 WSADATA wsaData;
 SOCKET wSock;
 struct sockaddr_in sockaddr;
 
 int test_port(int port);
-int thread_handler(int initial, int numThreads, int max);
+int thread_handler(vector<int> ports);
 void print_usage();
-
-using namespace std;
 
 int main(int argc, char *argv[]){
     // Create default variable values
-    vector<thread> threads;
     vector<future<int>> futures;
-    int numThreads = 10;
-    int portStart = 1;
-    int portEnd = 1024;    
+    vector<int> ports;
+    int numThreads = 10; 
+    int portStart;
+    int portEnd;
 
     // Convert command line arguments to strings
     vector<string> argList(argv, argv + argc);
+    vector<tuple<int, int>> portArguments;
 
     // Parse Inputs
     for (int i=0;i<argList.size()-1;i++){
         if (argList[i] == "-p"){
-            string port = argList[i+1];
-            for (int j=0;j<port.length();j++){
-                if (port[j] == '-'){
-                    portStart = stoi(port.substr(0, j));
-                    portEnd = stoi(port.substr(j+1, port.length()-j));
-                    break;
+            string portArg = argList[i+1];
+            // Split argument by commas
+            vector<string> substrings;
+            int split = 0;
+            for (int j=0;j<portArg.length();j++){
+                if (portArg[j] == ','){
+                    substrings.push_back(portArg.substr(split, j));
+                    split = j+1;
+                }
+            }
+            // Get last argument
+            substrings.push_back(portArg.substr(split, portArg.size()));
+
+            // Parse dashes and generate a list of ports to scan
+            for (int j=0;j<substrings.size();j++){
+                size_t dashPos = substrings[j].find('-');
+                if (dashPos != string::npos){
+                    portStart = stoi(substrings[j].substr(0,dashPos));
+                    portEnd = stoi(substrings[j].substr(dashPos+1, substrings[j].length()-dashPos));
+                    portArguments.push_back(make_tuple(portStart, portEnd));
+                    for (int k=portStart;k<portEnd+1;k++){
+                        ports.push_back(k);
+                    }
+                } else {
+                    portStart = stoi(substrings[j]);
+                    portEnd = stoi(substrings[j]);
+                    for (int k=portStart;k<portEnd+1;k++){
+                        ports.push_back(k);
+                    }
                 }
             }
         } else if (argList[i] == "-t"){
@@ -61,12 +85,17 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    cout << "Scanning ports " << portStart << '-' << portEnd << endl;
+    vector<vector<int>> threadTasks(numThreads, vector<int>(0,0));
+    for (int i=0; i<ports.size();i++){
+        threadTasks[i%numThreads].push_back(ports[i]);
+    }
+
+    //cout << "Scanning ports " << portStart << '-' << portEnd << endl;
     // Create threads
     cout << "Starting " << numThreads << " thread(s)\n";
     for(int i=0;i<numThreads;i++){
         // threads.push_back(thread(thread_handler, i+portStart, numThreads, portEnd));
-        futures.push_back(async(thread_handler, i+portStart, numThreads, portEnd));
+        futures.push_back(async(thread_handler, threadTasks[i]));
     }
 
     // Wait for threads to finish before exiting
@@ -89,29 +118,27 @@ int main(int argc, char *argv[]){
 
 // Calculates the ports each thread will scan
 // Returns total number of open ports
-int thread_handler(int initial, int numThreads, int max){
+int thread_handler(vector<int> ports){
     // Set variable to initial value
     int openCount = 0;
     int closedCount = 0;
-    int i = initial;
     int retvalue;
-    while (i<=max){
+    for (int i=0;i<ports.size();i++){
         // Scan the port
-        retvalue = test_port(i);
+        retvalue = test_port(ports[i]);
         // Retry if port is closed
         
-        for (int j=0;j<3;j++){
+        for (int j=0;j<2;j++){
             if (retvalue == 0){
                 openCount++;
                 break;
             } else {
-                cout << "Connection failed on port " << i << endl;
-                retvalue = test_port(i);
+                cout << "Connection failed on port " << ports[i] << endl;
+                retvalue = test_port(ports[i]);
             }
             closedCount++;
         }
         // Set next port to scan
-        i += numThreads;
     }
     return openCount;
 }
