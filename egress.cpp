@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     vector<string> argList(argv, argv + argc);
 
     // Parse Inputs
-    for (int i=0;i<argList.size();i++){
+    for (int i=0;i<argList.size()-1;i++){
         if (argList[i] == "-p"){
             string port = argList[i+1];
             for (int j=0;j<port.length();j++){
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
+    cout << "Scanning ports " << portStart << '-' << portEnd << endl;
     // Create threads
     cout << "Starting " << numThreads << " thread(s)\n";
     for(int i=0;i<numThreads;i++){

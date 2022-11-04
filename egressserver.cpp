@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     }
 
     cout << "Opening ports (this may take a while)..." << endl;
-    for (int i=0;i<1024;i++){
+    for (int i=1;i<1024;i++){
         threads.push_back(thread(open_port, i));
         Sleep(2);
     }
