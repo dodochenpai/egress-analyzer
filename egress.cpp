@@ -31,7 +31,6 @@ int main(int argc, char *argv[]){
 
     // Convert command line arguments to strings
     vector<string> argList(argv, argv + argc);
-    vector<tuple<int, int>> portArguments;
 
     // Parse Inputs
     for (int i=0;i<argList.size()-1;i++){
@@ -56,7 +55,6 @@ int main(int argc, char *argv[]){
                 if (dashPos != string::npos){
                     portStart = stoi(substrings[j].substr(0,dashPos));
                     portEnd = stoi(substrings[j].substr(dashPos+1, substrings[j].length()-dashPos));
-                    portArguments.push_back(make_tuple(portStart, portEnd));
                     for (int k=portStart;k<portEnd+1;k++){
                         ports.push_back(k);
                     }
@@ -228,5 +226,5 @@ void print_usage(){
     cout << "OPTIONS:" << endl;
     cout << "  -h print help text" << endl;
     cout << "  -t <threads> set number of threads (default: 10)" << endl;
-    cout << "  -p <startport>-<endport> choose port range (default: 0-1024)" << endl;
+    cout << "  -p <startport>-<endport> choose port range (default: 1-1024)" << endl;
 }
