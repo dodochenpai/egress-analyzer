@@ -51,6 +51,7 @@ int main(int argc, char *argv[]){
 
             // Parse dashes and generate a list of ports to scan
             for (int j=0;j<substrings.size();j++){
+                // If dash in comma separated argument, generate range
                 size_t dashPos = substrings[j].find('-');
                 if (dashPos != string::npos){
                     portStart = stoi(substrings[j].substr(0,dashPos));
@@ -59,6 +60,7 @@ int main(int argc, char *argv[]){
                     for (int k=portStart;k<portEnd+1;k++){
                         ports.push_back(k);
                     }
+                // Otherwise, add single port 
                 } else {
                     portStart = stoi(substrings[j]);
                     portEnd = stoi(substrings[j]);
@@ -85,6 +87,14 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
+    // Default scan ports 1-1024
+    if (ports.size() == 0){
+        for (int i=1;i<1025;i++){
+            ports.push_back(i);
+        }
+    }
+
+    // Divide ports between threads
     vector<vector<int>> threadTasks(numThreads, vector<int>(0,0));
     for (int i=0; i<ports.size();i++){
         threadTasks[i%numThreads].push_back(ports[i]);
