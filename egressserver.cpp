@@ -19,9 +19,9 @@ int main(int argc, char* argv[])
 {
     vector<thread> threads;
     // Initialize Winsock
-    int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0) {
-        printf("WSAStartup failed with error: %d\n", iResult);
+    int result = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (result != 0) {
+        cout << "WSAStartup failed" << endl;
         return 1;
     }
 
@@ -35,10 +35,7 @@ int main(int argc, char* argv[])
         threads[i].join();
     }
 
-
     WSACleanup();
-
-
 
     return 0;
 }
@@ -48,10 +45,11 @@ int open_port(int port){
     SOCKET ListenSocket;
     SOCKET ClientSocket;
 
-    struct addrinfo *result = NULL;
+    struct addrinfo *addrinfo = NULL;
     struct addrinfo hints;
 
     int iSendResult;
+    int result;
 
     ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -62,30 +60,32 @@ int open_port(int port){
     char portbuffer[7];
     itoa(port, portbuffer, 10);
 
-    int iResult = getaddrinfo(NULL, portbuffer, &hints, &result);
-    if ( iResult != 0 ) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+    result = getaddrinfo(NULL, portbuffer, &hints, &addrinfo);
+    if (result != 0) {
+        cout << "getaddrinfo failed" << endl;
         return 1;
     }
 
     // Create a SOCKET for the server to listen for client connections.
     ListenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, (unsigned int)NULL, (unsigned int)NULL);
     if (ListenSocket == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        cout << "Socket failed" << endl;
         return 1;
     }
 
     // Setup the TCP listening socket
-    iResult = bind( ListenSocket, result->ai_addr, (int)result->ai_addrlen);
-    if (iResult == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+    result = bind( ListenSocket, addrinfo->ai_addr, (int)addrinfo->ai_addrlen);
+    if (result == SOCKET_ERROR) {
+        cout << "Bind failed" << endl;
         closesocket(ListenSocket);
         return 1;
     }
 
-    iResult = listen(ListenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
+    freeaddrinfo(addrinfo);
+
+    result = listen(ListenSocket, SOMAXCONN);
+    if (result == SOCKET_ERROR) {
+        cout << "Listen failed" << endl;
         closesocket(ListenSocket);
         return 1;
     }
@@ -93,8 +93,7 @@ int open_port(int port){
     // Accept a client socket
     ClientSocket = accept(ListenSocket, NULL, NULL);
     if (ClientSocket == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
-        closesocket(ListenSocket);
+        cout << "Accept failed" << endl;
         return 1;
     }
 
@@ -102,9 +101,9 @@ int open_port(int port){
     closesocket(ListenSocket);
 
     // shutdown the connection since we're done
-    iResult = shutdown(ClientSocket, SD_SEND);
-    if (iResult == SOCKET_ERROR) {
-        printf("shutdown failed with error: %d\n", WSAGetLastError());
+    result = shutdown(ClientSocket, SD_SEND);
+    if (result == SOCKET_ERROR) {
+        cout << "Shutdown failed" << endl;
         closesocket(ClientSocket);
         return 1;
     }

@@ -20,6 +20,7 @@ void print_usage();
 
 using namespace std;
 
+// Global Statistics
 int globalOpenCount = 0;
 int globalClosedCount = 0;
 
@@ -30,8 +31,10 @@ int main(int argc, char *argv[]){
     int portStart = 0;
     int portEnd = 1024;    
 
+    // Convert command line arguments to strings
     vector<string> argList(argv, argv + argc);
 
+    // Parse Inputs
     for (int i=0;i<argList.size();i++){
         if (argList[i] == "-p"){
             string port = argList[i+1];
@@ -54,9 +57,9 @@ int main(int argc, char *argv[]){
     }
 
     // Initialize WinSock
-    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (iResult != 0) {
-        printf("WSAStartup failed with error: %d\n", iResult);
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        cout << "WSAStartup Failed" << endl;
         return 1;
     }
 
@@ -67,11 +70,11 @@ int main(int argc, char *argv[]){
     }
 
     // Wait for threads to finish before exiting
-    
     for (int i=0;i<numThreads;i++){
         threads[i].join();
     }
 
+    // Print out some statistics
     cout << "Open ports: " << globalOpenCount << endl;
     cout << "Closed ports: " << globalClosedCount << endl;
     //cout << "See outfile for more output" << endl;
@@ -96,10 +99,10 @@ int thread_handler(int initial, int numThreads, int max){
 
 int test_port(int port){
     // Initialize Variables
-    WSADATA wsaData;
     SOCKET wSock;
     struct sockaddr_in sockaddr;
     struct timeval tv;
+    int result;
 
     // Set Options
     // Google Test
@@ -117,18 +120,22 @@ int test_port(int port){
     // Create Socket
     wSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, (unsigned int)NULL, (unsigned int)NULL);
     if (wSock == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        WSACleanup();
+        cout << "Socket Error" << endl;
         return 1;
     }
     // Set socket to non-blocking
     u_long mode = 1;
-    ioctlsocket(wSock, FIONBIO, &mode);
+    result = ioctlsocket(wSock, FIONBIO, &mode);
+    if (result != 0){
+        cout << "I/O Mode Error" << endl;
+        return 1;
+    }
     // Connect to address
-    int result = WSAConnect(wSock, (SOCKADDR*)&sockaddr, sizeof(sockaddr), NULL, NULL, NULL, NULL);
+    result = WSAConnect(wSock, (SOCKADDR*)&sockaddr, sizeof(sockaddr), NULL, NULL, NULL, NULL);
     if (result == SOCKET_ERROR){
         if (WSAGetLastError() != WSAEWOULDBLOCK){
-            return false;
+            cout << "Connect Error" << endl;
+            return 1;
         }
 
         // If no reply received,
@@ -146,7 +153,11 @@ int test_port(int port){
         }
     }
     // Disconnect socket
-    WSASendDisconnect(wSock, NULL);
+    result = WSASendDisconnect(wSock, NULL);
+    if (result != 0){
+        cout << "Disconnect Error" << endl;
+        return 1;
+    }
     return 0;
 }
 
