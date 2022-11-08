@@ -17,17 +17,19 @@ WSADATA wsaData;
 SOCKET wSock;
 struct sockaddr_in sockaddr;
 
-int test_port(int port);
-int thread_handler(vector<int> ports);
+int test_port(int port, string ipAddress);
+int thread_handler(vector<int> ports, string ipAddress);
 void print_usage();
 
 int main(int argc, char *argv[]){
+
     // Create default variable values
     vector<future<int>> futures;
     vector<int> ports;
     int numThreads = 10; 
     int portStart;
     int portEnd;
+    string host = "allports.exposed";
 
     // Convert command line arguments to strings
     vector<string> argList(argv, argv + argc);
@@ -75,6 +77,8 @@ int main(int argc, char *argv[]){
         } else if (argList[i] == "-h"){
             print_usage();
             return 0;
+        } else if (argList[i] == "-i"){
+            host = argList[i+1];
         }
     }
 
@@ -83,6 +87,18 @@ int main(int argc, char *argv[]){
     if (result != 0) {
         cout << "WSAStartup Failed" << endl;
         return 1;
+    }
+
+    // Get Hostname Information
+    string ipAddress;
+    hostent * host_info = gethostbyname(host.c_str());
+    if (host_info == NULL){
+        cout << "Failed to resolve host" << endl;
+        return 0;
+    } else {
+        struct in_addr addr;
+        addr.s_addr = *(u_long *) host_info->h_addr_list[0];
+        ipAddress = inet_ntoa(addr); 
     }
 
     // Default scan ports 1-1024
@@ -98,12 +114,11 @@ int main(int argc, char *argv[]){
         threadTasks[i%numThreads].push_back(ports[i]);
     }
 
-    //cout << "Scanning ports " << portStart << '-' << portEnd << endl;
     // Create threads
     cout << "Starting " << numThreads << " thread(s)\n";
     for(int i=0;i<numThreads;i++){
         // threads.push_back(thread(thread_handler, i+portStart, numThreads, portEnd));
-        futures.push_back(async(thread_handler, threadTasks[i]));
+        futures.push_back(async(thread_handler, threadTasks[i], ipAddress));
     }
 
     // Wait for threads to finish before exiting
@@ -111,6 +126,7 @@ int main(int argc, char *argv[]){
         //threads[i].join();
         futures[i].wait();
     }
+    // Calculate number of open ports
     int openCount = 0;
     for (int i=0; i<futures.size();i++){
         openCount += futures[i].get();
@@ -126,32 +142,22 @@ int main(int argc, char *argv[]){
 
 // Calculates the ports each thread will scan
 // Returns total number of open ports
-int thread_handler(vector<int> ports){
+int thread_handler(vector<int> ports, string ipAddress){
     // Set variable to initial value
     int openCount = 0;
     int closedCount = 0;
     int retvalue;
     for (int i=0;i<ports.size();i++){
         // Scan the port
-        retvalue = test_port(ports[i]);
-        // Retry if port is closed
-        
-        for (int j=0;j<2;j++){
-            if (retvalue == 0){
-                openCount++;
-                break;
-            } else {
-                cout << "Connection failed on port " << ports[i] << endl;
-                retvalue = test_port(ports[i]);
-            }
-            closedCount++;
+        retvalue = test_port(ports[i], ipAddress);
+        if (retvalue == 0){
+            openCount++;
         }
-        // Set next port to scan
     }
     return openCount;
 }
 
-int test_port(int port){
+int test_port(int port, string ipAddress){
     // Initialize Variables
     SOCKET wSock;
     struct sockaddr_in sockaddr;
@@ -163,12 +169,12 @@ int test_port(int port){
     // Google Test
     // string target = "8.8.8.8";
     // allports.exposed
-    string target = "45.79.204.144";
+    // string target = "45.79.204.144";
     // Localhost test
     // string target = "127.0.0.1";
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons(port);
-    sockaddr.sin_addr.s_addr = inet_addr(target.c_str());
+    sockaddr.sin_addr.s_addr = inet_addr(ipAddress.c_str());
     tv.tv_sec = 5;
     tv.tv_usec = 0;
 
@@ -206,7 +212,7 @@ int test_port(int port){
             // cout << "Port " << port << " is not open" << endl;
             retvalue = 1;
         } else {
-            //cout << "Port " << port << " is open" << endl;
+            cout << "Port " << port << " is open" << endl;
             retvalue = 0;
             // Disconnect socket
             result = WSASendDisconnect(wSock, NULL);
@@ -224,6 +230,7 @@ int test_port(int port){
 void print_usage(){
     cout << "Usage: egress.exe [options]" << endl;
     cout << "OPTIONS:" << endl;
+    cout << "  -i <host> choose the host to scan" << endl;
     cout << "  -h print help text" << endl;
     cout << "  -t <threads> set number of threads (default: 10)" << endl;
     cout << "  -p <startport>-<endport> choose port range (default: 1-1024)" << endl;
