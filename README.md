@@ -16,9 +16,10 @@ Egress Server
 > .\egress.exe -h
 Usage: egress.exe [options]
 OPTIONS:
+  -i <host> choose the host to scan
   -h print help text
   -t <threads> set number of threads (default: 10)
-  -p <startport>-<endport>[,<single port>] choose port range (default: 1-1024)
+  -p <startport>-<endport> choose port range (default: 1-1024)
 ```
 Scan all ports
 ```
@@ -27,6 +28,10 @@ Scan all ports
 Scan ports 80 and 100-200 with 20 threads
 ```
 > .\egress.exe -p 80,100-200 -t 20
+```
+Scan allports.exposed
+```
+> .\egress.exe -i allports.exposed
 ```
 Open ports 1-1024 on a system
 ```

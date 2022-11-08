@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
             for (int j=0;j<threadArg.length();j++){
                 numThreads = stoi(threadArg);
             }
-        } else if (argList[i] == "-h"){
+        } else if (argList[i] == "-h" | argList[i+1] == "-h"){
             print_usage();
             return 0;
         } else if (argList[i] == "-i"){
