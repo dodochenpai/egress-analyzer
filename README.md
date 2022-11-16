@@ -1,14 +1,9 @@
 # egress-analyzer
-Lightweight, standalone, command-line based TCP egress analyzer for Windows used to identify the destination ports blocked by a firewall. The client can also be used within a local network by pointing to a device running the egress server.
+Lightweight, standalone, command-line based TCP egress analyzer for Windows used to test firewall rules. The executable operates as both a client to scan a server, or as a server to open specified ports.
 
 # Build
-Egress Client
 ```
-> g++ egress.cpp -o egress.exe -lws2_32 -static-libstdc++ -static -static-libgcc
-```
-Egress Server
-```
-> g++ egressserver.cpp -o egressserver.exe -lws2_32 -static-libstdc++ -static -static-libgcc
+> g++ main.cpp client.cpp server.cpp -o egress.exe -lws2_32 -static-libstdc++ -static -static-libgcc
 ```
 
 # Usage
@@ -16,6 +11,7 @@ Egress Server
 > .\egress.exe -h
 Usage: egress.exe [options]
 OPTIONS:
+  --server opens ports instead of connects to them
   -i <host> choose the host to scan
   -h print help text
   -t <threads> set number of threads (default: 10)
@@ -35,5 +31,5 @@ Scan allports.exposed
 ```
 Open ports 1-1024 on a system
 ```
-> .\egressserver.exe
+> .\egress.exe --server -p 1-1024
 ```

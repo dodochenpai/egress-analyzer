@@ -1,86 +1,9 @@
-#define WIN32_LEAN_AND_MEAN
+#include "client.h"
 
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <vector>
-#include <future>
-
-using namespace std;
-
-WSADATA wsaData;
-SOCKET wSock;
-struct sockaddr_in sockaddr;
-
-int test_port(int port, string ipAddress);
-int thread_handler(vector<int> ports, string ipAddress);
-void print_usage();
-
-int main(int argc, char *argv[]){
+int startClient(vector<int> ports, int numThreads, string host){
 
     // Create default variable values
     vector<future<int>> futures;
-    vector<int> ports;
-    int numThreads = 10; 
-    int portStart;
-    int portEnd;
-    string host = "allports.exposed";
-
-    // Convert command line arguments to strings
-    vector<string> argList(argv, argv + argc);
-
-    // Parse Inputs
-    for (int i=0;i<argList.size()-1;i++){
-        if (argList[i] == "-p"){
-            string portArg = argList[i+1];
-            // Split argument by commas
-            vector<string> substrings;
-            int split = 0;
-            for (int j=0;j<portArg.length();j++){
-                if (portArg[j] == ','){
-                    substrings.push_back(portArg.substr(split, j));
-                    split = j+1;
-                }
-            }
-            // Get last argument
-            substrings.push_back(portArg.substr(split, portArg.size()));
-
-            // Parse dashes and generate a list of ports to scan
-            for (int j=0;j<substrings.size();j++){
-                // If dash in comma separated argument, generate range
-                size_t dashPos = substrings[j].find('-');
-                if (dashPos != string::npos){
-                    portStart = stoi(substrings[j].substr(0,dashPos));
-                    portEnd = stoi(substrings[j].substr(dashPos+1, substrings[j].length()-dashPos));
-                    for (int k=portStart;k<portEnd+1;k++){
-                        ports.push_back(k);
-                    }
-                // Otherwise, add single port 
-                } else {
-                    portStart = stoi(substrings[j]);
-                    portEnd = stoi(substrings[j]);
-                    for (int k=portStart;k<portEnd+1;k++){
-                        ports.push_back(k);
-                    }
-                }
-            }
-        } else if (argList[i] == "-t"){
-            string threadArg = argList[i+1];
-            for (int j=0;j<threadArg.length();j++){
-                numThreads = stoi(threadArg);
-            }
-        } else if (argList[i] == "-h" | argList[i+1] == "-h"){
-            print_usage();
-            return 0;
-        } else if (argList[i] == "-i"){
-            host = argList[i+1];
-        }
-    }
 
     // Initialize WinSock
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -230,6 +153,7 @@ int test_port(int port, string ipAddress){
 void print_usage(){
     cout << "Usage: egress.exe [options]" << endl;
     cout << "OPTIONS:" << endl;
+    cout << "  --server opens ports instead of connects to them" << endl;
     cout << "  -i <host> choose the host to scan" << endl;
     cout << "  -h print help text" << endl;
     cout << "  -t <threads> set number of threads (default: 10)" << endl;
