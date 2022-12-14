@@ -1,6 +1,8 @@
 # egress-analyzer
 Lightweight, standalone, command-line based TCP egress analyzer for Windows used to test firewall rules. The executable operates as both a client to scan a server, or as a server to open specified ports.
 
+Inspired by SEC530. Thanks to Ismael Valenzuela and Justin Henderson for the great course!
+
 # Build
 ```
 > g++ main.cpp client.cpp server.cpp -o egress.exe -lws2_32 -static-libstdc++ -static -static-libgcc
