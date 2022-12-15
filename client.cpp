@@ -54,8 +54,10 @@ int startClient(vector<int> ports, int numThreads, string host){
     for (int i=0; i<futures.size();i++){
         openCount += futures[i].get();
     }
+    int closedCount = ports.size() - openCount;
     // Print out some statistics
     cout << "Open ports: " << openCount << endl;
+    cout << "Closed ports: " << closedCount << endl;
     // cout << "See outfile for more output" << endl;
 
     WSACleanup();
